@@ -5,7 +5,13 @@ const App = () => {
   return (
     <div id="my-app">
       <Header title="lalala" />
-      hello nihao <div data-xx="666">6665-value</div>
+      <div className="grid grid-cols-4">
+        {
+          Array.from({ length: 12 }).map((item, index) => {
+            return <div key={index}>{index}</div>
+          })  
+        }
+      </div>
     </div>
   );
 };
