@@ -4,14 +4,14 @@ const createElement = (type, props, ...children) => {
     type,
     props: {
       ...props,
-      children: children.flat()
+      children
       // children: children.map(child => {
       //   return (typeof child === 'string' || typeof child === 'number') ? createTextElement(child) : child
       // }).flat()
     }
   }
 }
- 
+
 const createTextElement = (text) => {
   return {
     type: 'TEXT_ELEMENT',

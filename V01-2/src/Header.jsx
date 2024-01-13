@@ -9,4 +9,13 @@ const Header = ({ title }) => {
   );
 };
 
+console.log(
+  <div>
+123asd
+    {[1,2,3,4,5]}
+    123123
+  </div>,
+  'aaaaa'
+)
+
 export default Header;

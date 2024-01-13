@@ -1,6 +1,10 @@
 const render = (app, container) => {
 
-  console.log(app, 'app')
+  if(Array.isArray(app)) {
+    return app.map(item => {
+      render(item, container)
+    })
+  }
 
   // 创建 dom 元素
   const el = (() => {
@@ -23,10 +27,6 @@ const render = (app, container) => {
         // 当 app 为 null 时，渲染出来的内容为空
         if (app === null) {
           return document.createTextNode('')
-        }
-        // 不该为 array
-        if (Array.isArray(app)) {
-          throw new Error('Not support array')
         }
     }
 
@@ -52,7 +52,6 @@ const render = (app, container) => {
           render(child, dom)
         })
 
-
         return dom
       }
       // 当为 function 时，表示该app 是个函数组件
@@ -60,14 +59,12 @@ const render = (app, container) => {
         // 传入 props 执行该 函数，得到 vdom 结构，并丢给渲染函数去创建实际的 dom 
         return render(app.type(app.props), document.createDocumentFragment())
     }
-  })()
-
-
-
+  })();
 
   // 把 el 挂载到目标元素上
-
-  container.appendChild(el)
+  [el].flat().forEach(item => {
+    container.appendChild(item)
+  })
 
   // 返回 el， 将动态创建出来的el 丢给调用方。方便调用地使用
   return el
