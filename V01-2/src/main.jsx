@@ -6,8 +6,6 @@ import App from './App'
 const root = document.querySelector('#app')
 
 
-console.log(<App />)
-
 ReactDOM.createRoot(
   root
 ).render(
