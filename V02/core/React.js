@@ -89,14 +89,12 @@ function performUnitOfWork(work) {
     return work.sibling
   }
 
-  let parentSibling = null
-
-  while (work.parent) {
-    parentSibling = work.parent.sibling
-    if (parentSibling) {
-      return parentSibling
+  let parent = work.parent
+  while (parent) {
+    if (parent.sibling) {
+      return parent.sibling
     }
-    work = work.parent
+    parent = parent.parent
   }
 
   return null
