@@ -10,13 +10,33 @@ const App = () => {
           return <div key={index}>{index}</div>;
         })}
       </div>
-      <div>{null}</div>
+      {/* <div>{null}</div>
       <div>{undefined}</div>
       <div>{123}</div>
-      <div>{() => '123'}</div>
+      <div>{() => "123"}</div>
       <div>{false}</div>
       <div>{true}</div>
-      <div>{[1,2,3,4]}</div>
+      <div>{[1, 2, 3, 4]}</div> */}
+
+      <div>
+        <span>List 1</span>
+        <div>
+          <div>Item 1</div>
+          <div>Item 2</div>
+          <div>Item 3</div>
+          <div>Item 4</div>
+        </div>
+      </div>
+
+      <div>
+        <span>List 2</span>
+        <div>
+          <div>Item 1</div>
+          <div>Item 2</div>
+          <div>Item 3</div>
+          <div>Item 4</div>
+        </div>
+      </div>
     </div>
   );
 };

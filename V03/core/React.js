@@ -6,13 +6,13 @@ const createElement = (type, props, ...children) => {
       ...props,
       // children
       children: children.map(child => {
-        return (typeof child === 'string' || typeof child === 'number') ? createTextElement(child) : child
+        const isTextNode = typeof child === 'string' || typeof child === 'number'
+
+        return isTextNode ? createTextElement(child) : child
       }).flat()
     }
   }
 }
-
-
 
 const createTextElement = (text) => {
   return {
@@ -38,9 +38,7 @@ const updateProps = (dom, props) => {
   })
 }
 
-const initChildren = (work) => {
-  const children = work.props.children || [];
-
+const initChildren = (work, children) => {
   let previousChild = null
   children.forEach((child, index) => {
     const newWork = {
@@ -75,13 +73,17 @@ let root = null
  * @param { typeof nextUnitOfWork } work 
  */
 function performUnitOfWork(work) {
-  if (!work.dom) {
+
+  const isFunctionComponent = typeof work.type === 'function'
+
+  if (!work.dom && !isFunctionComponent) {
     work.dom = createDOM(work.type)
     // 填充props
     updateProps(work.dom, work.props)
   }
 
-  initChildren(work)
+  const children = isFunctionComponent ? [work.type(work.props)] : work.props.children
+  initChildren(work, children)
 
   if (work.child) {
     return work.child
@@ -111,7 +113,7 @@ function workLoop(deadline) {
     shouldYield = deadline.timeRemaining() < 1
   }
 
-  if(!nextUnitOfWork && root) {
+  if (!nextUnitOfWork && root) {
     // end 
     console.log('fiber 结构构建完成， 准备进入更新dom阶段')
     commitRoot(root)
@@ -122,16 +124,30 @@ function workLoop(deadline) {
   window.requestIdleCallback(workLoop)
 }
 
-function commitRoot(root){
-  if(!root) return 
+function commitRoot(root) {
+  if (!root) return
+  console.log(root, 'root')
   // 从根节点开始去追加dom 到页面上
   commitWork(root)
 }
 
-function commitWork(work){
-  if(!work)return 
-  work.parent?.dom?.appendChild?.(work.dom)
-  
+function commitWork(work) {
+  if (!work) return
+
+  // 如果自身没有 dom，就不进行dom 的追加了（函数组件）
+  if(work.dom){
+    // 有dom 的情况， 则对应的是原生标签， 需要找到 parent.dom 去append dom， 
+    // 又因为 parent 可能是一个函数组件， 没有dom， 所以需要继续往上找
+    let parent = work.parent
+    while (parent) {
+      if (parent.dom) {
+        parent.dom.appendChild(work.dom)
+        break
+      }
+      parent = parent.parent
+    }
+  }
+
   commitWork(work.child)
   commitWork(work.sibling)
 }
