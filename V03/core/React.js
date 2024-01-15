@@ -68,6 +68,23 @@ let nextUnitOfWork = null
  */
 let root = null
 
+
+const updateFunctionComponent = (work) => {
+  const children = [work.type(work.props)]
+  initChildren(work, children)
+}
+
+const updateHostComponent = (work) => {
+  if (!work.dom) {
+    work.dom = createDOM(work.type)
+    // 填充props
+    updateProps(work.dom, work.props)
+  }
+
+  const children = work.props.children
+  initChildren(work, children)
+}
+
 /**
  * 
  * @param { typeof nextUnitOfWork } work 
@@ -76,31 +93,24 @@ function performUnitOfWork(work) {
 
   const isFunctionComponent = typeof work.type === 'function'
 
-  if (!work.dom && !isFunctionComponent) {
-    work.dom = createDOM(work.type)
-    // 填充props
-    updateProps(work.dom, work.props)
+  if (isFunctionComponent) {
+    updateFunctionComponent(work)
+  } else {
+    updateHostComponent(work)
   }
-
-  const children = isFunctionComponent ? [work.type(work.props)] : work.props.children
-  initChildren(work, children)
 
   if (work.child) {
     return work.child
   }
 
-  if (work.sibling) {
-    return work.sibling
-  }
+  let fiber = work
 
-  let parent = work.parent
-  while (parent) {
-    if (parent.sibling) {
-      return parent.sibling
+  while (fiber) {
+    if (fiber.sibling) {
+      return fiber.sibling
     }
-    parent = parent.parent
+    fiber = fiber.parent
   }
-
   return null
 }
 
@@ -135,7 +145,7 @@ function commitWork(work) {
   if (!work) return
 
   // 如果自身没有 dom，就不进行dom 的追加了（函数组件）
-  if(work.dom){
+  if (work.dom) {
     // 有dom 的情况， 则对应的是原生标签， 需要找到 parent.dom 去append dom， 
     // 又因为 parent 可能是一个函数组件， 没有dom， 所以需要继续往上找
     let parent = work.parent
