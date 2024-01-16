@@ -1,4 +1,9 @@
 import { createPromise } from './utils'
+import TaskExecutor from './TaskExecutor'
+
+
+const taskExecutor = new TaskExecutor()
+
 
 const createElement = (type, props, ...children) => {
   return {
@@ -21,20 +26,23 @@ const createTextElement = (text) => {
 
 }
 
-
-let unitOfWork = null
-let root = null
-let resolveFn = null
 const createFiber = async (node) => {
   const { resolve, promise } = createPromise()
-  resolveFn = resolve
 
-  const tmpWork = unitOfWork = {
+  const tmpWork = {
     props: {
       children: [node]
     }
   }
-  root = unitOfWork
+
+  taskExecutor.add(() => {
+    performUnitOfWork(tmpWork)
+  })
+
+  taskExecutor.addEventListener('finished', () => {
+    resolve()
+  })
+
   await promise
   return tmpWork
 }
@@ -91,14 +99,14 @@ const performUnitOfWork = (node) => {
 
 
   if (node.child) {
-    return node.child
+    return taskExecutor.add(() => performUnitOfWork(node.child))
   }
 
   let curNode = node;
 
   while (curNode) {
     if (curNode.sibling) {
-      return curNode.sibling
+      return taskExecutor.add(() => performUnitOfWork(curNode.sibling))
     }
 
     curNode = curNode.parent
@@ -106,35 +114,6 @@ const performUnitOfWork = (node) => {
 
   return null
 }
-
-/**
- * 
- * @param {IdleDeadline} deadline 
- */
-const workLoop = (deadline) => {
-  let hasTime = true
-  while (hasTime && unitOfWork) {
-    unitOfWork = performUnitOfWork(unitOfWork)
-
-    hasTime = deadline.timeRemaining() > 2
-  }
-
-  if (!unitOfWork && root) {
-    console.log('创建完毕')
-    console.log(root)
-    root = null
-    resolveFn?.()
-  }
-
-  window.requestIdleCallback(workLoop)
-}
-
-
-
-
-
-window.requestIdleCallback(workLoop)
-
 
 
 const React = {
