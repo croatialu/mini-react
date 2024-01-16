@@ -1,3 +1,5 @@
+import { createPromise } from './utils'
+
 const createElement = (type, props, ...children) => {
   return {
     type,
@@ -22,20 +24,23 @@ const createTextElement = (text) => {
 
 let unitOfWork = null
 let root = null
-const createFiber = (node) => {
-  unitOfWork = {
-    dom: null,
+let resolveFn = null
+const createFiber = async (node) => {
+  const { resolve, promise } = createPromise()
+  resolveFn = resolve
+
+  const tmpWork = unitOfWork = {
     props: {
       children: [node]
     }
   }
   root = unitOfWork
+  await promise
+  return tmpWork
 }
 
 
 const performUnitOfWork = (node) => {
-  console.log(node, 'node')
-
   const isFunctionComponent = typeof node.type === 'function'
 
   const children = isFunctionComponent ? [node.type(node.props)] : node.props.children
@@ -72,7 +77,6 @@ const performUnitOfWork = (node) => {
     const newNode = {
       type: tmpNode.type,
       props: tmpNode.props,
-      dom: null,
       parent: node,
       sibling: null,
       child: null
@@ -119,6 +123,7 @@ const workLoop = (deadline) => {
     console.log('创建完毕')
     console.log(root)
     root = null
+    resolveFn?.()
   }
 
   window.requestIdleCallback(workLoop)
