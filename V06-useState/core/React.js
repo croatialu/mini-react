@@ -300,7 +300,12 @@ const useState = (initial) => {
   localWipFiber.stateHooks = stateHooks;
 
   const setState = (action) => {
-    stateHook.queue.push(typeof action === 'function' ? action : () => action)
+
+    const eagerState = typeof action === 'function' ? action(stateHook.state) : action
+
+    if(eagerState === stateHook.state) return
+
+    stateHook.queue.push(() => eagerState)
 
     wipRoot = {
       ...localWipFiber,
