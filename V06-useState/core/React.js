@@ -286,17 +286,21 @@ const useState = (initial) => {
   
   stateHookIndex++
   const stateHook = {
-    state: oldStateHook ? oldStateHook.state : initial
+    state: oldStateHook ? oldStateHook.state : initial,
+    queue: oldStateHook ? oldStateHook.queue : []
   }
+
+  stateHook.queue.forEach(action => {
+    stateHook.state = action(stateHook.state)
+  })
+  stateHook.queue = []
 
   stateHooks.push(stateHook)
 
   localWipFiber.stateHooks = stateHooks;
 
   const setState = (action) => {
-    const newValue = action(stateHook.state)
-
-    stateHook.state = newValue
+    stateHook.queue.push(typeof action === 'function' ? action : () => action)
 
     wipRoot = {
       ...localWipFiber,
